@@ -8,14 +8,15 @@ from datetime import datetime # 💡 날짜 계산을 위해 추가된 라이브
 # 페이지 설정
 
 st.set_page_config(page_title="락페 체조 위원회 일정 공유방", page_icon="🎸", layout="wide")
-hide_st_style = """
-<style>
-#stDecoration {display: none;}
-div[data-testid="stStatusWidget"] {display: none;}
-</style>
-"""
-st.markdown(hide_st_style, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+[data-testid="stStatusWidget"] {
+    visibility: hidden;
+    height: 0;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # 💡 구글 Noto Sans KR 폰트 적용 CSS 주입
 st.markdown("""
