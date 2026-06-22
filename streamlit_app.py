@@ -302,7 +302,7 @@ with tab2:
                 with st.container(border=True):
                     st.markdown(f"**🎵 {fest}**")
                     dates = st.multiselect(f"[{fest}] 참여 날짜 선택", fest_dict[fest], key=f"dates_{fest}_{fk}")
-                    memo = st.text_input(f"[{fest}] 메모 (선택)", placeholder="예: 토요일 슬램존 대기", key=f"memo_{fest}_{fk}")
+                    memo = st.text_input(f"[{fest}] 메모 (선택)", placeholder="예: 건강하게 체조합시다", key=f"memo_{fest}_{fk}")
                     user_inputs[fest] = {"dates": dates, "memo": memo}
             
             st.divider()
