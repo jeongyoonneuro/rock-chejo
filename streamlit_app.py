@@ -516,5 +516,4 @@ with tab4:
                 memo_text = f" (💬 {row['Memo']})" if pd.notna(row['Memo']) and str(row['Memo']).strip() else ""
                 result_fest_text += f"  - 👤 {row['Name']}: {pretty_dates}{memo_text}\n"
             result_fest_text += "\n"
-        
-            st.code(result_fest_text, language="text")
+        st.code(result_fest_text, language="text")
