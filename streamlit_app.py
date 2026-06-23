@@ -482,7 +482,6 @@ with tab4:
     st.markdown("### 📋 카톡 공유용 일정 복사하기")
     st.caption("원하는 방식을 선택한 뒤, 코드 박스 우측 상단의 📋(복사) 아이콘을 누르세요!")
     
-    # 탭 4 안에서 다시 사람별/락페별 서브 탭 구성
     share_tab1, share_tab2 = st.tabs(["👤 사람별로 모으기", "🎸 락페별로 모으기"])
     
     # --- 서브 탭 1: 사람별 모아보기 ---
@@ -492,7 +491,14 @@ with tab4:
         
         for name, group in grouped_by_name:
             result_text += f"👤 {name}\n"
-            for _, row in group.iterrows():
+            # 사람 안에서도 날짜순으로 정렬
+            temp_group = group.copy()
+            temp_group['first_date'] = temp_group['Dates'].apply(
+                lambda x: min([d.strip()[:10] for d in str(x).split(',')]) if pd.notna(x) else "9999"
+            )
+            temp_group = temp_group.sort_values(by='first_date')
+            
+            for _, row in temp_group.iterrows():
                 raw_dates = [d.strip() for d in str(row['Dates']).split(',')]
                 pretty_dates = format_consecutive_dates(raw_dates)
                 
@@ -502,18 +508,40 @@ with tab4:
         
         st.code(result_text, language="text")
     
-    # --- 서브 탭 2: 락페별 모아보기 ---
+    # --- 서브 탭 2: 락페별 모아보기 (💡 날짜순 정렬 적용) ---
     with share_tab2:
         result_fest_text = "🎸 락페 체조 위원회 일정 총정리 (락페별) 🎸\n\n"
         grouped_by_fest = df.groupby('Festival')
         
+        # 1. 락페스티벌별로 가장 빠른 날짜를 찾아 정렬 기준 만들기
+        fest_sort_keys = {}
         for fest_name, group in grouped_by_fest:
+            all_dates = []
+            for dates_str in group['Dates']:
+                all_dates.extend([d.strip()[:10] for d in str(dates_str).split(',')])
+            fest_sort_keys[fest_name] = min(all_dates) if all_dates else "9999-99-99"
+            
+        # 2. 가장 빠른 날짜 순으로 락페스티벌 이름 정렬
+        sorted_festivals = sorted(fest_sort_keys.keys(), key=lambda x: fest_sort_keys[x])
+        
+        # 3. 정렬된 락페스티벌 순서대로 출력
+        for fest_name in sorted_festivals:
+            group = grouped_by_fest.get_group(fest_name)
             result_fest_text += f"🎸 {fest_name}\n"
-            for _, row in group.iterrows():
+            
+            # 락페 내부에서도 유저들을 날짜순으로 정렬
+            temp_group = group.copy()
+            temp_group['first_date'] = temp_group['Dates'].apply(
+                lambda x: min([d.strip()[:10] for d in str(x).split(',')]) if pd.notna(x) else "9999"
+            )
+            temp_group = temp_group.sort_values(by='first_date')
+            
+            for _, row in temp_group.iterrows():
                 raw_dates = [d.strip() for d in str(row['Dates']).split(',')]
                 pretty_dates = format_consecutive_dates(raw_dates)
                 
                 memo_text = f" (💬 {row['Memo']})" if pd.notna(row['Memo']) and str(row['Memo']).strip() else ""
                 result_fest_text += f"  - 👤 {row['Name']}: {pretty_dates}{memo_text}\n"
             result_fest_text += "\n"
+        
         st.code(result_fest_text, language="text")
