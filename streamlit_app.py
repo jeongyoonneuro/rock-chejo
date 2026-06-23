@@ -517,6 +517,4 @@ with tab4:
                 result_fest_text += f"  - 👤 {row['Name']}: {pretty_dates}{memo_text}\n"
             result_fest_text += "\n"
         
-        st.code(result_fest_text, language="text")
-                        except Exception as e:
-                            st.error(f"삭제 중 오류 발생: {e}")
+            st.code(result_fest_text, language="text")
