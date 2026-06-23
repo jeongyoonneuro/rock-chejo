@@ -168,7 +168,7 @@ fest_dict = load_festivals()
 df = load_user_data()
 
 # 탭 구성
-tab1, tab2, tab3 = st.tabs(["👥 겹치는 일정 확인", "➕ 내 일정 등록", "⚙️ 일정 수정/삭제"])
+tab1, tab2, tab3, tab4 = st.tabs(["👥 겹치는 일정 확인", "➕ 내 일정 등록", "⚙️ 일정 수정/삭제", "📋 카톡 공유"])
 
 # ==========================================
 # TAB 1: 겹치는 일정 확인
@@ -331,50 +331,6 @@ with tab1:
                     )
             else:
                 st.warning("달력에 표시할 유효한 날짜 데이터가 없습니다.")
-
-# 💡 [교체할 부분] 카톡 공유용 복사 블록 (사람별 + 락페별 탭 구성)
-        st.divider()
-        with st.expander("📋 카톡 공유용: 일정 한눈에 모아보고 복사하기"):
-            st.caption("원하는 방식을 선택한 뒤, 박스 우측 상단의 📋(복사) 아이콘을 누르세요!")
-            
-            # 아코디언 내부를 사람별/락페별 탭으로 분리
-            share_tab1, share_tab2 = st.tabs(["👤 사람별로 모으기", "🎸 락페별로 모으기"])
-            
-            # --- 탭 1: 사람별 모아보기 ---
-            with share_tab1:
-                result_text = "🎸 락페 체조 위원회 일정 총정리 (멤버별) 🎸\n\n"
-                grouped_by_name = df.groupby('Name')
-                
-                for name, group in grouped_by_name:
-                    result_text += f"👤 {name}\n"
-                    for _, row in group.iterrows():
-                        raw_dates = [d.strip() for d in str(row['Dates']).split(',')]
-                        pretty_dates = format_consecutive_dates(raw_dates)
-                        
-                        memo_text = f" (💬 {row['Memo']})" if pd.notna(row['Memo']) and str(row['Memo']).strip() else ""
-                        result_text += f"  - [{row['Festival']}] {pretty_dates}{memo_text}\n"
-                    result_text += "\n"
-                
-                st.code(result_text, language="text")
-            
-            # --- 탭 2: 락페별 모아보기 ---
-            with share_tab2:
-                result_fest_text = "🎸 락페 체조 위원회 일정 총정리 (락페별) 🎸\n\n"
-                grouped_by_fest = df.groupby('Festival')
-                
-                for fest_name, group in grouped_by_fest:
-                    result_fest_text += f"🎸 {fest_name}\n"
-                    for _, row in group.iterrows():
-                        raw_dates = [d.strip() for d in str(row['Dates']).split(',')]
-                        pretty_dates = format_consecutive_dates(raw_dates)
-                        
-                        memo_text = f" (💬 {row['Memo']})" if pd.notna(row['Memo']) and str(row['Memo']).strip() else ""
-                        # 락페 아래에 어떤 멤버가 가는지 정렬
-                        result_fest_text += f"  - 👤 {row['Name']}: {pretty_dates}{memo_text}\n"
-                    result_fest_text += "\n"
-                
-                st.code(result_fest_text, language="text")
-
 # ==========================================
 # TAB 2: 내 일정 일괄 등록
 # ==========================================
@@ -516,5 +472,49 @@ with tab3:
                             st.cache_data.clear()
                             st.success(f"[{edit_target}] 일정이 삭제되었습니다.")
                             st.rerun()
+
+# ==========================================
+# TAB 4: 일정 복사/공유
+# ==========================================
+with tab4:
+    st.markdown("### 📋 카톡 공유용 일정 복사하기")
+    st.caption("원하는 방식을 선택한 뒤, 코드 박스 우측 상단의 📋(복사) 아이콘을 누르세요!")
+    
+    # 탭 4 안에서 다시 사람별/락페별 서브 탭 구성
+    share_tab1, share_tab2 = st.tabs(["👤 사람별로 모으기", "🎸 락페별로 모으기"])
+    
+    # --- 서브 탭 1: 사람별 모아보기 ---
+    with share_tab1:
+        result_text = "🎸 락페 체조 위원회 일정 총정리 (멤버별) 🎸\n\n"
+        grouped_by_name = df.groupby('Name')
+        
+        for name, group in grouped_by_name:
+            result_text += f"👤 {name}\n"
+            for _, row in group.iterrows():
+                raw_dates = [d.strip() for d in str(row['Dates']).split(',')]
+                pretty_dates = format_consecutive_dates(raw_dates)
+                
+                memo_text = f" (💬 {row['Memo']})" if pd.notna(row['Memo']) and str(row['Memo']).strip() else ""
+                result_text += f"  - [{row['Festival']}] {pretty_dates}{memo_text}\n"
+            result_text += "\n"
+        
+        st.code(result_text, language="text")
+    
+    # --- 서브 탭 2: 락페별 모아보기 ---
+    with share_tab2:
+        result_fest_text = "🎸 락페 체조 위원회 일정 총정리 (락페별) 🎸\n\n"
+        grouped_by_fest = df.groupby('Festival')
+        
+        for fest_name, group in grouped_by_fest:
+            result_fest_text += f"🎸 {fest_name}\n"
+            for _, row in group.iterrows():
+                raw_dates = [d.strip() for d in str(row['Dates']).split(',')]
+                pretty_dates = format_consecutive_dates(raw_dates)
+                
+                memo_text = f" (💬 {row['Memo']})" if pd.notna(row['Memo']) and str(row['Memo']).strip() else ""
+                result_fest_text += f"  - 👤 {row['Name']}: {pretty_dates}{memo_text}\n"
+            result_fest_text += "\n"
+        
+        st.code(result_fest_text, language="text")
                         except Exception as e:
                             st.error(f"삭제 중 오류 발생: {e}")
