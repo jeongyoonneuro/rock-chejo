@@ -473,7 +473,7 @@ with tab3:
                             st.success(f"[{edit_target}] 일정이 삭제되었습니다.")
                             st.rerun()
                         except Exception as e:
-                                st.error(f"수정 중 오류 발생: {e}")
+                            st.error(f"수정 중 오류 발생: {e}")
 
 # ==========================================
 # TAB 4: 일정 복사/공유
