@@ -266,6 +266,34 @@ with tab1:
             else:
                 st.warning("달력에 표시할 유효한 날짜 데이터가 없습니다.")
 
+
+        # 💡 [여기서부터 새로 추가!] 개인별 일정 텍스트 추출 및 복사 기능
+        st.divider()
+        with st.expander("📋 카톡 공유용: 개인별 일정 한눈에 모아보고 복사하기"):
+            st.caption("아래 박스 우측 상단의 📋(복사) 아이콘을 누르면 전체 내용이 복사됩니다!")
+            
+            # 카톡 공유용 헤더
+            result_text = "🎸 락페 체조 위원회 일정 총정리 🎸\n\n"
+            
+            # 이름을 기준으로 데이터 그룹화
+            grouped = df.groupby('Name')
+            
+            for name, group in grouped:
+                result_text += f"👤 {name}\n"
+                for _, row in group.iterrows():
+                    # 쉼표로 구분된 날짜들에 각각 요일 추가 함수(add_weekday) 적용
+                    raw_dates = [d.strip() for d in str(row['Dates']).split(',')]
+                    pretty_dates = ", ".join([add_weekday(d) for d in raw_dates])
+                    
+                    # 메모가 있다면 괄호로 묶어서 추가, 없으면 빈칸
+                    memo_text = f" (💬 {row['Memo']})" if pd.notna(row['Memo']) and str(row['Memo']).strip() else ""
+                    
+                    result_text += f"  - [{row['Festival']}] {pretty_dates}{memo_text}\n"
+                result_text += "\n"
+            
+            # st.code를 사용하면 텍스트 박스와 함께 기본 복사 버튼이 제공됩니다!
+            st.code(result_text, language="text")
+
 # ==========================================
 # TAB 2: 내 일정 일괄 등록
 # ==========================================
