@@ -23,8 +23,14 @@ st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         
+        /* 기본 텍스트에만 폰트 적용 (아이콘 폰트를 덮어씌우지 않도록 !important 제거 또는 완화) */
         html, body, [class*="css"], [class*="st-"] {
-            font-family: 'Noto Sans KR', sans-serif !important;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        /* 💡 Streamlit 기본 아이콘(화살표, 복사 버튼 등) 폰트 강제 복구 */
+        .stIcon, .material-symbols-rounded, [class*="icon"] {
+            font-family: 'Material Symbols Rounded', 'Material Icons' !important;
         }
         
         /* 📅 달력 내부 텍스트 줄바꿈 강제 (말줄임표 절대 방지) */
