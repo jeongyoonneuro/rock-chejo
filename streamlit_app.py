@@ -72,6 +72,66 @@ def add_weekday(date_str):
         return f"{date_str} ({weekdays[dt.weekday()]})"
     except ValueError:
         return date_str # 형식이 안 맞으면 원본 반환
+        
+# 💡 [여기서부터 새로 추가!] 연속된 날짜를 묶고 '-'를 '/'로 바꿔주는 함수
+def format_consecutive_dates(date_list):
+    if not date_list or not date_list[0]:
+        return ""
+        
+    parsed_dates = []
+    for d in date_list:
+        d = d.strip()
+        if "(" in d:
+            d = d.split("(")[0].strip() # 괄호 안의 요일 임시 제거
+            
+        try:
+            clean_d = d.replace("/", "-") 
+            parsed_dates.append(datetime.strptime(clean_d, "%Y-%m-%d"))
+        except ValueError:
+            pass
+            
+    if not parsed_dates:
+        return ", ".join(date_list)
+        
+    parsed_dates.sort()
+    weekdays_kr = ["월", "화", "수", "목", "금", "토", "일"]
+    
+    # 연속된 날짜들을 그룹으로 묶기
+    groups = []
+    current_group = [parsed_dates[0]]
+    
+    for i in range(1, len(parsed_dates)):
+        if (parsed_dates[i] - parsed_dates[i-1]).days == 1:
+            current_group.append(parsed_dates[i])
+        else:
+            groups.append(current_group)
+            current_group = [parsed_dates[i]]
+    groups.append(current_group)
+    
+    # 묶인 그룹을 텍스트로 변환 (2026/10/02~04 형태로)
+    result = []
+    for group in groups:
+        start_dt = group[0]
+        end_dt = group[-1]
+        start_str = start_dt.strftime("%Y/%m/%d")
+        start_wd = weekdays_kr[start_dt.weekday()]
+        
+        if len(group) == 1:
+            result.append(f"{start_str} ({start_wd})")
+        else:
+            end_wd = weekdays_kr[end_dt.weekday()]
+            # 같은 연도, 같은 월이면 일(dd)만 표시
+            if start_dt.year == end_dt.year and start_dt.month == end_dt.month:
+                end_str = end_dt.strftime("%d")
+            # 같은 연도, 다른 월이면 월/일(mm/dd) 표시 (예: 09/30~10/01)
+            elif start_dt.year == end_dt.year:
+                end_str = end_dt.strftime("%m/%d")
+            else:
+                end_str = end_dt.strftime("%Y/%m/%d")
+                
+            result.append(f"{start_str}~{end_str} ({start_wd}~{end_wd})")
+            
+    return ", ".join(result)
 
 # 1) 락페스티벌 프리셋 데이터 불러오기
 @st.cache_data(ttl=600) 
@@ -266,32 +326,26 @@ with tab1:
             else:
                 st.warning("달력에 표시할 유효한 날짜 데이터가 없습니다.")
 
-
-        # 💡 [여기서부터 새로 추가!] 개인별 일정 텍스트 추출 및 복사 기능
+# 💡 [변경될 부분] 카톡 공유용 복사 블록
         st.divider()
         with st.expander("📋 카톡 공유용: 개인별 일정 한눈에 모아보고 복사하기"):
             st.caption("아래 박스 우측 상단의 📋(복사) 아이콘을 누르면 전체 내용이 복사됩니다!")
             
-            # 카톡 공유용 헤더
             result_text = "🎸 락페 체조 위원회 일정 총정리 🎸\n\n"
-            
-            # 이름을 기준으로 데이터 그룹화
             grouped = df.groupby('Name')
             
             for name, group in grouped:
                 result_text += f"👤 {name}\n"
                 for _, row in group.iterrows():
-                    # 쉼표로 구분된 날짜들에 각각 요일 추가 함수(add_weekday) 적용
+                    # 💡 변경된 로직: 쉼표로 구분된 날짜들을 파싱해서 연속된 날짜 묶어주기
                     raw_dates = [d.strip() for d in str(row['Dates']).split(',')]
-                    pretty_dates = ", ".join([add_weekday(d) for d in raw_dates])
+                    pretty_dates = format_consecutive_dates(raw_dates)
                     
-                    # 메모가 있다면 괄호로 묶어서 추가, 없으면 빈칸
                     memo_text = f" (💬 {row['Memo']})" if pd.notna(row['Memo']) and str(row['Memo']).strip() else ""
                     
                     result_text += f"  - [{row['Festival']}] {pretty_dates}{memo_text}\n"
                 result_text += "\n"
             
-            # st.code를 사용하면 텍스트 박스와 함께 기본 복사 버튼이 제공됩니다!
             st.code(result_text, language="text")
 
 # ==========================================
